@@ -100,54 +100,31 @@ if track_data["coordinates"]:
 else:
     st.write("Keine Koordinaten gefunden.")
 
-# --- Personen- & EKG-Analyse ---
+# --- Personen- & EKG-Analyse (wie in deinem Beispiel) ---
 st.header("Personen- & EKG-Analyse")
+
 persons = Person.get_person_data()
 person_names = Person.get_person_list(persons)
-selected_name = st.selectbox("Wähle eine Person", options=person_names, key="person_select")
-selected_person = next(p for p in persons if p.get_full_name() == selected_name)
-st.image(Image.open(selected_person.picture_path), caption=selected_name)
+selected_name = st.selectbox("Wähle eine Person", options=person_names)
+selected_person_data = Person.find_person_data_by_name(str(selected_name))
 
-# Alter berechnen und anzeigen
-birthdate = getattr(selected_person, "birthdate", None)
-alter_str = "Nicht verfügbar"
-if birthdate:
-    if isinstance(birthdate, str):
-        try:
-            birthdate = datetime.strptime(birthdate, "%Y-%m-%d").date()
-        except Exception:
-            birthdate = None
-    if isinstance(birthdate, date):
-        today = date.today()
-        alter = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
-        alter_str = f"{alter} Jahre"
-st.write(f"Alter: {alter_str}")
+# Bild anzeigen
+st.image(Image.open(selected_person_data.picture_path), caption=selected_name)
 
-# Testauswahl und Testdatum anzeigen
-testdatum_str = "Nicht verfügbar"
-testauswahl = None
-if hasattr(selected_person, "ekg_tests") and selected_person.ekg_tests:
-    testauswahl = st.selectbox(
-        "Wähle einen EKG-Test",
-        options=[f"Test {i+1}" for i in range(len(selected_person.ekg_tests))],
-        key="test_select"
-    )
-    test_index = int(testauswahl.split()[-1]) - 1
-    test = selected_person.ekg_tests[test_index]
-    test_date = getattr(test, "test_date", None)
-    if test_date:
-        if isinstance(test_date, str):
-            try:
-                test_date_obj = datetime.strptime(test_date, "%Y-%m-%d").date()
-                testdatum_str = test_date_obj.strftime("%d.%m.%Y")
-            except Exception:
-                testdatum_str = test_date
-        elif isinstance(test_date, date):
-            testdatum_str = test_date.strftime("%d.%m.%Y")
-st.write(f"Datum des Tests: {testdatum_str}")
+# Geburtsjahr und Alter anzeigen
+st.write(f"Geburtsjahr: {selected_person_data.date_of_birth}")
+st.write(f"Alter: {selected_person_data.calc_age()} Jahre")
+
+# Testdatum anzeigen
+selected_test = st.selectbox(
+    "Wähle einen EKG-Test",
+    options=[str(i + 1) for i in range(len(selected_person_data.ekg_tests))]
+)
+testdatum = selected_person_data.ekg_tests[int(selected_test)-1]["date"] if selected_person_data.ekg_tests else None
+st.write(f"Datum des Tests: {testdatum}")
 
 # Maximalpuls-Eingabe (aus Klasse vorbelegen)
-hr_max = st.number_input("Maximale Herzfrequenz", min_value=100, max_value=250, value=int(selected_person.hr_max), step=1)
+hr_max = st.number_input("Maximale Herzfrequenz", min_value=100, max_value=250, value=int(selected_person_data.hr_max), step=1)
 
 # Analyse-Plot anzeigen (öffnet kein extra Fenster!)
 st.plotly_chart(dataplot(hr_max))
@@ -163,12 +140,12 @@ zone_stats = zone_minutes.to_frame().join(zone_power.rename("Ø Power (W)"))
 st.write("## Zonenstatistik")
 st.dataframe(zone_stats)
 
-# Beispiel: EKG des ausgewählten Tests verwenden
-if hasattr(selected_person, "ekg_tests") and selected_person.ekg_tests:
-    ekg_obj = EKGdata(selected_person.ekg_tests[test_index])
+# Beispiel: Erstes EKG der ausgewählten Person verwenden
+if selected_person_data.ekg_tests:
+    ekg_obj = EKGdata(selected_person_data.ekg_tests[0])
     ekg_obj.find_peaks()
     hr_est = ekg_obj.estimate_hr()
     st.write(f"Geschätzte Herzfrequenz aus EKG: {hr_est:.1f} bpm")
 else:
-    st.write("Keine EKG-Daten für diese Person vorhanden.")
+    st.write("Keine EKG-Daten für diese Person verfügbar.")
 
