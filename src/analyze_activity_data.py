@@ -181,8 +181,6 @@ def dataplot(hr_max):
     ))
 
     fig.update_layout(shapes=shapes)
-
-    fig.show()
     return fig
 
 # ...existing code...

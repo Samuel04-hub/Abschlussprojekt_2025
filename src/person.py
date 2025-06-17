@@ -1,6 +1,6 @@
 import json
 from PIL import Image
-
+from datetime import date
 class Person:
     def __init__(self, id : int, date_of_birth : int, firstname, lastname, picture_path, ekg_tests, gender = "Male"):
         self.id = id
@@ -22,6 +22,11 @@ class Person:
     def set_hr(self, hr):
         self.hr_max = hr
 
+    def calc_age(self):
+        """Berechnet das Alter der Person."""
+        current_year = date.today().year
+        return current_year - int(self.date_of_birth)
+    
     def get_full_name(self):
         return self.lastname + ", " + self.firstname
 
@@ -63,13 +68,13 @@ class Person:
             person_object_list.append(person_object)
         return person_object_list
 
-def get_person_object_by_full_name(full_name):
-    persons = get_person_data()
-    firstname = full_name.split(", ")[1]
-    lastname = full_name.split(", ")[0]
-    for person in persons:
-        if person.firstname == firstname and person.lastname == lastname:
-            return person
+    def get_person_object_by_full_name(self, full_name):
+        persons = self.get_person_data()
+        firstname = full_name.split(", ")[1]
+        lastname = full_name.split(", ")[0]
+        for person in persons:
+            if person.firstname == firstname and person.lastname == lastname:
+                return person
 
 if __name__ == "__main__":
     print("This is a module with some functions to read the person data")
