@@ -23,7 +23,7 @@ IMAGE_DIR = "data/images"
 os.makedirs(IMAGE_DIR, exist_ok=True)
 
 # Basisverzeichnis für FIT-Dateien (anpassbar)
-BASE_DIR = "C:/Abschlussprojekt_2025/fit-files"
+BASE_DIR = "fit-files"
 if not os.path.exists(BASE_DIR):
     st.warning(f"Das Verzeichnis {BASE_DIR} existiert nicht. Bitte überprüfe den Pfad.")
     BASE_DIR = "fit-files"  # Fallback-Verzeichnis
